@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - THE OUTRAGE</title>
+  <meta name="description" content="Contact THE OUTRAGE for export quality branded clothing. WhatsApp, Email, and store information.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    🚚 FREE DELIVERY ON ORDERS ABOVE PKR 5000 | Cash On Delivery Available Nationwide
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">THE <span>OUTRAGE</span></a>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="/">Home</a></li>
+          <li><a href="/men">Men</a></li>
+          <li><a href="/women">Women</a></li>
+          <li><a href="/junior">Junior</a></li>
+          <li><a href="/brands">Brands</a></li>
+          <li><a href="/contact" class="active">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="header-icons">
+        <button onclick="openSearch()">🔍</button>
+        <button onclick="openCart()">
+          🛒
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" onclick="toggleMobileMenu()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+    <a href="/">Home</a>
+    <a href="/men">Men</a>
+    <a href="/women">Women</a>
+    <a href="/junior">Junior</a>
+    <a href="/brands">Brands</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <div class="contact-page">
+    <div class="contact-content">
+      <div class="contact-info">
+        <h1>CONTACT US</h1>
+        <p style="color: var(--muted); margin-bottom: 40px;">Have questions? We'd love to hear from you.</p>
+
+        <div class="contact-info-item">
+          <h3>📍 Store Location</h3>
+          <p>Pakistan</p>
+          <p>Nationwide Delivery Available</p>
+        </div>
+
+        <div class="contact-info-item">
+          <h3>📱 WhatsApp</h3>
+          <p>+92 328 9145508</p>
+          <p>+92 304 4852996</p>
+          <a href="https://wa.me/923289145508" target="_blank" class="whatsapp-btn">
+            💬 Chat on WhatsApp (03289145508)
+          </a>
+          <a href="https://wa.me/923044852996" target="_blank" class="whatsapp-btn" style="margin-top: 10px;">
+            💬 Chat on WhatsApp (03044852996)
+          </a>
+        </div>
+
+        <div class="contact-info-item">
+          <h3>📧 Email</h3>
+          <p>info@theoutrage.com</p>
+          <p>support@theoutrage.com</p>
+        </div>
+
+        <div class="contact-info-item">
+          <h3>⏰ Business Hours</h3>
+          <p>Monday - Saturday: 10:00 AM - 8:00 PM</p>
+          <p>Sunday: Closed</p>
+        </div>
+
+        <div class="map-placeholder">
+          <div>
+            <p style="font-size: 24px;">🗺️</p>
+            <p>Google Map Integration</p>
+            <p style="font-size: 14px;">Add your Google Maps embed code here</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form">
+        <h2 style="margin-bottom: 30px;">SEND US A MESSAGE</h2>
+        <form onsubmit="submitContactForm(event)">
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" required placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required placeholder="Your email">
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" placeholder="Your phone number">
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject *</label>
+            <input type="text" id="subject" name="subject" required placeholder="Subject">
+          </div>
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" name="message" required rows="5" placeholder="Your message"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>THE OUTRAGE</h3>
+        <p>Premium export quality leftover branded clothing.</p>
+      </div>
+      <div class="footer-section">
+        <h3>QUICK LINKS</h3>
+        <a href="/">Home</a>
+        <a href="/men">Men</a>
+        <a href="/women">Women</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 THE OUTRAGE. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      updateCartCount();
+    });
+
+    function submitContactForm(event) {
+      event.preventDefault();
+      alert('Thank you for your message! We will get back to you soon.');
+      event.target.reset();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Men's Clothing - THE OUTRAGE | Export Quality Branded Fashion</title>
+  <meta name="description" content="Shop men's export quality branded clothing at THE OUTRAGE. T-Shirts, Polo, Shirts, Shorts, Trousers from Nike, Adidas, Zara and more.">
+  <meta name="keywords" content="men's clothing, branded t-shirts, men's fashion, export quality men's wear, Pakistan">
+  <link rel="canonical" href="https://theoutrage.com/men">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    🚚 FREE DELIVERY ON ORDERS ABOVE PKR 5000 | Cash On Delivery Available Nationwide
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">THE <span>OUTRAGE</span></a>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="/">Home</a></li>
+          <li><a href="/men" class="active">Men</a></li>
+          <li><a href="/women">Women</a></li>
+          <li><a href="/junior">Junior</a></li>
+          <li><a href="/brands">Brands</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="header-icons">
+        <button onclick="openSearch()">🔍</button>
+        <button onclick="openCart()">
+          🛒
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" onclick="toggleMobileMenu()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+    <a href="/">Home</a>
+    <a href="/men">Men</a>
+    <a href="/women">Women</a>
+    <a href="/junior">Junior</a>
+    <a href="/brands">Brands</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <section class="section" style="padding-top: 150px;">
+    <div class="section-title">
+      <h1>MEN'S COLLECTION</h1>
+      <p>Premium export quality branded clothing for men</p>
+    </div>
+
+    <div class="categories-grid" style="margin-bottom: 60px;">
+      <div class="category-card" onclick="filterByCategory(1)">
+        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600" alt="T-Shirts">
+        <div class="category-card-content">
+          <h3>T-SHIRTS</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="filterByCategory(2)">
+        <img src="https://images.unsplash.com/photo-1625910513413-5fc66588e60a?w=600" alt="Polo T-Shirts">
+        <div class="category-card-content">
+          <h3>POLO T-SHIRTS</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="filterByCategory(3)">
+        <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600" alt="Shirts">
+        <div class="category-card-content">
+          <h3>SHIRTS</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="filterByCategory(4)">
+        <img src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600" alt="Shorts">
+        <div class="category-card-content">
+          <h3>SHORTS</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="filterByCategory(5)">
+        <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600" alt="Trousers">
+        <div class="category-card-content">
+          <h3>TROUSERS</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="products-grid" id="menProducts"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>THE OUTRAGE</h3>
+        <p>Premium export quality leftover branded clothing.</p>
+      </div>
+      <div class="footer-section">
+        <h3>QUICK LINKS</h3>
+        <a href="/">Home</a>
+        <a href="/men">Men</a>
+        <a href="/women">Women</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 THE OUTRAGE. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadProducts('gender', 'menProducts', false, 'men');
+      updateCartCount();
+    });
+
+    function filterByCategory(categoryId) {
+      loadProducts('category', 'menProducts', false, 'men', categoryId);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brands - THE OUTRAGE | Shop Nike, Adidas, Zara, Mango & More</title>
+  <meta name="description" content="Shop from top international brands at THE OUTRAGE. Nike, Adidas, Puma, Levis, Outfitters, Breakout, Zara, Mango, H&M and more.">
+  <meta name="keywords" content="brands, Nike, Adidas, Zara, Mango, Outfitters, Breakout, branded clothing, Pakistan">
+  <link rel="canonical" href="https://theoutrage.com/brands">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    🚚 FREE DELIVERY ON ORDERS ABOVE PKR 5000 | Cash On Delivery Available Nationwide
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">THE <span>OUTRAGE</span></a>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="/">Home</a></li>
+          <li><a href="/men">Men</a></li>
+          <li><a href="/women">Women</a></li>
+          <li><a href="/junior">Junior</a></li>
+          <li><a href="/brands" class="active">Brands</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="header-icons">
+        <button onclick="openSearch()">🔍</button>
+        <button onclick="openCart()">
+          🛒
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" onclick="toggleMobileMenu()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+    <a href="/">Home</a>
+    <a href="/men">Men</a>
+    <a href="/women">Women</a>
+    <a href="/junior">Junior</a>
+    <a href="/brands">Brands</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <section class="section" style="padding-top: 150px;">
+    <div class="section-title">
+      <h1>OUR BRANDS</h1>
+      <p>Shop from world-renowned international brands</p>
+    </div>
+
+    <div class="brands-slider" style="flex-wrap: wrap; justify-content: center;">
+      <div class="brand-card" onclick="filterByBrand(1)">MANGO</div>
+      <div class="brand-card" onclick="filterByBrand(2)">LEVIS</div>
+      <div class="brand-card" onclick="filterByBrand(3)">ZARA</div>
+      <div class="brand-card" onclick="filterByBrand(4)">MAN</div>
+      <div class="brand-card" onclick="filterByBrand(5)">FOLD UP</div>
+      <div class="brand-card" onclick="filterByBrand(6)">BREAKOUT</div>
+      <div class="brand-card" onclick="filterByBrand(7)">ENGINE</div>
+      <div class="brand-card" onclick="filterByBrand(8)">H&M</div>
+    </div>
+
+    <div class="products-grid" id="brandProducts" style="margin-top: 60px;"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>THE OUTRAGE</h3>
+        <p>Premium export quality leftover branded clothing.</p>
+      </div>
+      <div class="footer-section">
+        <h3>QUICK LINKS</h3>
+        <a href="/">Home</a>
+        <a href="/men">Men</a>
+        <a href="/women">Women</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 THE OUTRAGE. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadProducts('', 'brandProducts', false);
+      updateCartCount();
+    });
+
+    function filterByBrand(brandId) {
+      loadProducts('brand', 'brandProducts', false, null, brandId);
+    }
+  </script>
+</body>
+</html>

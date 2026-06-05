@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - THE OUTRAGE</title>
+  <meta name="description" content="Complete your order at THE OUTRAGE. Cash on delivery available nationwide.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    🚚 FREE DELIVERY ON ORDERS ABOVE PKR 5000 | Cash On Delivery Available Nationwide
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">THE <span>OUTRAGE</span></a>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="/">Home</a></li>
+          <li><a href="/men">Men</a></li>
+          <li><a href="/women">Women</a></li>
+          <li><a href="/junior">Junior</a></li>
+          <li><a href="/brands">Brands</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="header-icons">
+        <button onclick="openSearch()">🔍</button>
+        <button onclick="openCart()">
+          🛒
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" onclick="toggleMobileMenu()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+    <a href="/">Home</a>
+    <a href="/men">Men</a>
+    <a href="/women">Women</a>
+    <a href="/junior">Junior</a>
+    <a href="/brands">Brands</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <div class="checkout-page">
+    <h1>CHECKOUT</h1>
+
+    <form class="checkout-form" id="checkoutForm" onsubmit="placeOrder(event)">
+      <div class="form-group">
+        <label for="fullName">Full Name *</label>
+        <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name">
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number *</label>
+        <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number (e.g., 03001234567)">
+      </div>
+
+      <div class="form-group">
+        <label for="city">City *</label>
+        <input type="text" id="city" name="city" required placeholder="Enter your city">
+      </div>
+
+      <div class="form-group">
+        <label for="address">Full Address *</label>
+        <textarea id="address" name="address" required rows="3" placeholder="Enter your complete delivery address"></textarea>
+      </div>
+
+      <div class="order-summary">
+        <h2>ORDER SUMMARY</h2>
+        <div id="orderItems"></div>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="subtotal">PKR 0</span>
+        </div>
+        <div class="summary-row">
+          <span>Delivery</span>
+          <span id="delivery">PKR 0</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="total">PKR 0</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px; padding: 20px; background: var(--primary); border-radius: 10px; border: 1px solid var(--glass-border);">
+        <h3 style="color: var(--accent); margin-bottom: 15px;">💳 Payment Method</h3>
+        <p style="color: var(--muted);">Cash on Delivery (COD) Only</p>
+        <p style="color: var(--muted); font-size: 14px; margin-top: 10px;">Pay cash when your order arrives at your doorstep.</p>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 30px; padding: 20px;">
+        PLACE ORDER - CASH ON DELIVERY
+      </button>
+    </form>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>THE OUTRAGE</h3>
+        <p>Premium export quality leftover branded clothing.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 THE OUTRAGE. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadOrderSummary();
+      updateCartCount();
+    });
+
+    function loadOrderSummary() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const orderItemsContainer = document.getElementById('orderItems');
+
+      if (cart.length === 0) {
+        window.location.href = '/cart';
+        return;
+      }
+
+      let html = '';
+      let subtotal = 0;
+
+      cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+        html += `
+          <div class="summary-row">
+            <span>${item.name} (${item.size}) x ${item.quantity}</span>
+            <span>PKR ${itemTotal}</span>
+          </div>
+        `;
+      });
+
+      orderItemsContainer.innerHTML = html;
+
+      const delivery = subtotal >= 5000 ? 0 : 200;
+      const total = subtotal + delivery;
+
+      document.getElementById('subtotal').textContent = `PKR ${subtotal}`;
+      document.getElementById('delivery').textContent = delivery === 0 ? 'FREE' : `PKR ${delivery}`;
+      document.getElementById('total').textContent = `PKR ${total}`;
+    }
+
+    async function placeOrder(event) {
+      event.preventDefault();
+
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      if (cart.length === 0) {
+        alert('Your cart is empty');
+        return;
+      }
+
+      const formData = {
+        customer_name: document.getElementById('fullName').value,
+        phone: document.getElementById('phone').value,
+        city: document.getElementById('city').value,
+        address: document.getElementById('address').value,
+        items: cart,
+        total: document.getElementById('total').textContent.replace('PKR ', '')
+      };
+
+      try {
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          localStorage.removeItem('cart');
+          alert(`Order placed successfully! Order ID: ${result.orderId}\n\nWe will contact you shortly to confirm your order.`);
+          window.location.href = '/';
+        } else {
+          alert('Error placing order. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error placing order:', error);
+        alert('Error placing order. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

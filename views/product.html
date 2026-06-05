@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="productTitle">Product Details - THE OUTRAGE</title>
+  <meta name="description" id="productDescription" content="Product details at THE OUTRAGE - Export quality branded clothing.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    🚚 FREE DELIVERY ON ORDERS ABOVE PKR 5000 | Cash On Delivery Available Nationwide
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">THE <span>OUTRAGE</span></a>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="/">Home</a></li>
+          <li><a href="/men">Men</a></li>
+          <li><a href="/women">Women</a></li>
+          <li><a href="/junior">Junior</a></li>
+          <li><a href="/brands">Brands</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="header-icons">
+        <button onclick="openSearch()">🔍</button>
+        <button onclick="openCart()">
+          🛒
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" onclick="toggleMobileMenu()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+    <a href="/">Home</a>
+    <a href="/men">Men</a>
+    <a href="/women">Women</a>
+    <a href="/junior">Junior</a>
+    <a href="/brands">Brands</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <div class="product-details">
+    <div class="product-details-content">
+      <div class="product-gallery">
+        <div class="main-image" id="mainImage">
+          <img src="" alt="Product Image" id="mainImageImg">
+        </div>
+        <div class="thumbnail-images" id="thumbnailImages"></div>
+      </div>
+
+      <div class="product-info">
+        <p class="product-brand" id="productBrand">Brand Name</p>
+        <h1 id="productName">Product Name</h1>
+        <p class="product-description" id="productDescription">Product description goes here.</p>
+
+        <div class="product-price-section">
+          <span class="original-price" id="originalPrice">PKR 0</span>
+          <span class="sale-price" id="salePrice">PKR 0</span>
+        </div>
+
+        <div class="size-selector">
+          <h3>Select Size</h3>
+          <div class="size-options" id="sizeOptions"></div>
+        </div>
+
+        <div class="quantity-selector">
+          <h3>Quantity</h3>
+          <div class="quantity-controls">
+            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+            <input type="number" class="quantity-input" id="quantity" value="1" min="1">
+            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+          </div>
+        </div>
+
+        <div class="product-actions">
+          <button class="btn btn-primary" onclick="addToCart()">Add to Cart</button>
+          <button class="btn btn-secondary" onclick="buyNow()">Buy Now</button>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: var(--secondary); border-radius: 10px;">
+          <p style="color: var(--muted); font-size: 14px;">
+            📦 Free delivery on orders above PKR 5000<br>
+            💳 Cash on Delivery available<br>
+            🔄 7-day exchange policy
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top: 100px;">
+      <div class="section-title">
+        <h2>RELATED PRODUCTS</h2>
+      </div>
+      <div class="products-grid" id="relatedProducts"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>THE OUTRAGE</h3>
+        <p>Premium export quality leftover branded clothing.</p>
+      </div>
+      <div class="footer-section">
+        <h3>QUICK LINKS</h3>
+        <a href="/">Home</a>
+        <a href="/men">Men</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 THE OUTRAGE. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    let currentProduct = null;
+    let selectedSize = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const productId = window.location.pathname.split('/').pop();
+      loadProductDetails(productId);
+      updateCartCount();
+    });
+
+    async function loadProductDetails(productId) {
+      try {
+        const response = await fetch(`/api/product/${productId}`);
+        const product = await response.json();
+        currentProduct = product;
+
+        // Update page
+        document.title = `${product.name} - THE OUTRAGE`;
+        document.getElementById('productTitle').textContent = product.name;
+        document.getElementById('productDescription').setAttribute('content', product.description);
+        document.getElementById('productName').textContent = product.name;
+        document.getElementById('productBrand').textContent = product.brand_name;
+        document.getElementById('productDescription').textContent = product.description;
+        document.getElementById('originalPrice').textContent = `PKR ${product.original_price}`;
+        document.getElementById('salePrice').textContent = `PKR ${product.sale_price}`;
+
+        // Images
+        const images = JSON.parse(product.images || '[]');
+        document.getElementById('mainImageImg').src = images[0] || product.image;
+
+        const thumbnailContainer = document.getElementById('thumbnailImages');
+        thumbnailContainer.innerHTML = '';
+        images.forEach((img, index) => {
+          const thumb = document.createElement('div');
+          thumb.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+          thumb.innerHTML = `<img src="${img}" alt="Thumbnail">`;
+          thumb.onclick = () => changeMainImage(img, thumb);
+          thumbnailContainer.appendChild(thumb);
+        });
+
+        // Sizes
+        const sizes = JSON.parse(product.sizes || '[]');
+        const sizeContainer = document.getElementById('sizeOptions');
+        sizeContainer.innerHTML = '';
+        sizes.forEach(size => {
+          const sizeBtn = document.createElement('div');
+          sizeBtn.className = 'size-option';
+          sizeBtn.textContent = size;
+          sizeBtn.onclick = () => selectSize(size, sizeBtn);
+          sizeContainer.appendChild(sizeBtn);
+        });
+
+        // Load related products
+        loadRelatedProducts(product.gender, product.category_id);
+      } catch (error) {
+        console.error('Error loading product:', error);
+      }
+    }
+
+    function changeMainImage(img, thumb) {
+      document.getElementById('mainImageImg').src = img;
+      document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    }
+
+    function selectSize(size, btn) {
+      selectedSize = size;
+      document.querySelectorAll('.size-option').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function increaseQuantity() {
+      const input = document.getElementById('quantity');
+      input.value = parseInt(input.value) + 1;
+    }
+
+    function decreaseQuantity() {
+      const input = document.getElementById('quantity');
+      if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+      }
+    }
+
+    function addToCart() {
+      if (!selectedSize) {
+        alert('Please select a size');
+        return;
+      }
+
+      const cartItem = {
+        id: currentProduct.id,
+        name: currentProduct.name,
+        brand: currentProduct.brand_name,
+        price: currentProduct.sale_price,
+        image: currentProduct.image,
+        size: selectedSize,
+        quantity: parseInt(document.getElementById('quantity').value)
+      };
+
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existingIndex = cart.findIndex(item => item.id === cartItem.id && item.size === cartItem.size);
+
+      if (existingIndex > -1) {
+        cart[existingIndex].quantity += cartItem.quantity;
+      } else {
+        cart.push(cartItem);
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      alert('Added to cart!');
+    }
+
+    function buyNow() {
+      addToCart();
+      window.location.href = '/cart';
+    }
+
+    async function loadRelatedProducts(gender, categoryId) {
+      try {
+        const response = await fetch(`/api/products?gender=${gender}`);
+        const products = await response.json();
+        const related = products.filter(p => p.id !== currentProduct.id).slice(0, 4);
+        displayProducts(related, 'relatedProducts');
+      } catch (error) {
+        console.error('Error loading related products:', error);
+      }
+    }
+  </script>
+</body>
+</html>
