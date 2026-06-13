@@ -1,9 +1,35 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Multer storage config
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'product-' + unique + ext);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+  }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -444,27 +470,53 @@ app.get('/api/admin/products', (req, res) => {
   });
 });
 
+// Image upload endpoint
+app.post('/api/admin/upload', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file provided' });
+  }
+  const imagePath = '/uploads/' + req.file.filename;
+  res.json({ success: true, path: imagePath });
+});
+
+// Helper: upsert brand by name, return brand_id via callback
+function upsertBrand(brandName, callback) {
+  const slug = brandName.toLowerCase().replace(/\s+/g, '-');
+  db.get('SELECT id FROM brands WHERE name = ?', [brandName], (err, row) => {
+    if (err) return callback(err);
+    if (row) return callback(null, row.id);
+    db.run('INSERT INTO brands (name, slug) VALUES (?, ?)', [brandName, slug], function(err2) {
+      if (err2) return callback(err2);
+      callback(null, this.lastID);
+    });
+  });
+}
+
 app.post('/api/admin/products', (req, res) => {
-  const { name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
-  db.run('INSERT INTO products (name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [name, brand_id, category_id, description, original_price, sale_price, discount, image, JSON.stringify(sizes), stock, gender, featured, new_arrival], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
+  const { name, brand_name, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
+  const sizesJson = Array.isArray(sizes) ? JSON.stringify(sizes) : JSON.stringify(sizes ? sizes.split(',').map(s => s.trim()) : []);
+
+  upsertBrand(brand_name || 'Unknown', (err, brand_id) => {
+    if (err) return res.status(500).json({ error: err.message });
+    db.run('INSERT INTO products (name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, brand_id, category_id, description, original_price, sale_price, discount, image, sizesJson, stock, gender, featured || 0, new_arrival || 0], function(err2) {
+      if (err2) return res.status(500).json({ error: err2.message });
       res.json({ success: true, productId: this.lastID });
-    }
+    });
   });
 });
 
 app.put('/api/admin/products/:id', (req, res) => {
-  const { name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
-  db.run('UPDATE products SET name = ?, brand_id = ?, category_id = ?, description = ?, original_price = ?, sale_price = ?, discount = ?, image = ?, sizes = ?, stock = ?, gender = ?, featured = ?, new_arrival = ? WHERE id = ?',
-    [name, brand_id, category_id, description, original_price, sale_price, discount, image, JSON.stringify(sizes), stock, gender, featured, new_arrival, req.params.id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
+  const { name, brand_name, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
+  const sizesJson = Array.isArray(sizes) ? JSON.stringify(sizes) : JSON.stringify(sizes ? sizes.split(',').map(s => s.trim()) : []);
+
+  upsertBrand(brand_name || 'Unknown', (err, brand_id) => {
+    if (err) return res.status(500).json({ error: err.message });
+    db.run('UPDATE products SET name = ?, brand_id = ?, category_id = ?, description = ?, original_price = ?, sale_price = ?, discount = ?, image = ?, sizes = ?, stock = ?, gender = ?, featured = ?, new_arrival = ? WHERE id = ?',
+      [name, brand_id, category_id, description, original_price, sale_price, discount, image, sizesJson, stock, gender, featured || 0, new_arrival || 0, req.params.id], function(err2) {
+      if (err2) return res.status(500).json({ error: err2.message });
       res.json({ success: true });
-    }
+    });
   });
 });
 

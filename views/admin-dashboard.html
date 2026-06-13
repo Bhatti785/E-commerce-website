@@ -46,19 +46,7 @@
           </div>
           <div class="form-group">
             <label>Brand</label>
-            <select id="productBrand" required>
-              <option value="">Select Brand</option>
-              <option value="1">Nike</option>
-              <option value="2">Adidas</option>
-              <option value="3">Puma</option>
-              <option value="4">Levis</option>
-              <option value="5">Outfitters</option>
-              <option value="6">Breakout</option>
-              <option value="7">Engine</option>
-              <option value="8">Zara</option>
-              <option value="9">Mango</option>
-              <option value="10">H&M</option>
-            </select>
+            <input type="text" id="productBrand" required placeholder="e.g. Zara, Mango, H&M">
           </div>
           <div class="form-group">
             <label>Category</label>
@@ -103,8 +91,13 @@
             <input type="number" id="discount" required>
           </div>
           <div class="form-group">
-            <label>Image URL</label>
-            <input type="text" id="productImage" required placeholder="/images/products/product.jpg">
+            <label>Product Image</label>
+            <input type="file" id="productImageFile" accept="image/*" onchange="previewImage(this)">
+            <div id="imagePreviewContainer" style="display:none; margin-top:10px;">
+              <img id="imagePreview" src="" alt="Preview" style="max-width:200px; max-height:200px; border-radius:8px; border:1px solid var(--glass-border);">
+            </div>
+            <input type="hidden" id="productImage">
+            <small style="color:#aaa;">Upload an image (max 5MB). Leave empty to keep existing image when editing.</small>
           </div>
           <div class="form-group">
             <label>Sizes (comma separated)</label>
@@ -185,6 +178,7 @@
 
     function hideAddProductForm() {
       document.getElementById('addProductForm').style.display = 'none';
+      resetAddProductForm();
     }
 
     async function loadProducts() {
@@ -211,22 +205,61 @@
       }
     }
 
+    function previewImage(input) {
+      const container = document.getElementById('imagePreviewContainer');
+      const preview = document.getElementById('imagePreview');
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          container.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+      } else {
+        container.style.display = 'none';
+        preview.src = '';
+      }
+    }
+
+    async function uploadImageIfSelected() {
+      const fileInput = document.getElementById('productImageFile');
+      if (!fileInput.files || !fileInput.files[0]) return null;
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      const response = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Upload failed');
+      return result.path;
+    }
+
     async function addProduct(event) {
       event.preventDefault();
-      
-      const sizes = document.getElementById('productSizes').value.split(',').map(s => s.trim());
-      
+
+      let imagePath = document.getElementById('productImage').value;
+      try {
+        const uploaded = await uploadImageIfSelected();
+        if (uploaded) imagePath = uploaded;
+      } catch (err) {
+        alert('Image upload failed: ' + err.message);
+        return;
+      }
+
+      if (!imagePath) {
+        alert('Please select a product image.');
+        return;
+      }
+
       const productData = {
         name: document.getElementById('productName').value,
-        brand_id: parseInt(document.getElementById('productBrand').value),
+        brand_name: document.getElementById('productBrand').value,
         category_id: parseInt(document.getElementById('productCategory').value),
         gender: document.getElementById('productGender').value,
         description: document.getElementById('productDescription').value,
         original_price: parseFloat(document.getElementById('originalPrice').value),
         sale_price: parseFloat(document.getElementById('salePrice').value),
         discount: parseInt(document.getElementById('discount').value),
-        image: document.getElementById('productImage').value,
-        sizes: sizes,
+        image: imagePath,
+        sizes: document.getElementById('productSizes').value,
         stock: parseInt(document.getElementById('productStock').value),
         featured: document.getElementById('productFeatured').checked ? 1 : 0,
         new_arrival: document.getElementById('productNewArrival').checked ? 1 : 0
@@ -244,9 +277,11 @@
           alert('Product added successfully!');
           hideAddProductForm();
           loadProducts();
-          document.getElementById('loginForm').reset();
+          document.querySelector('#addProductForm form').reset();
+          document.getElementById('imagePreviewContainer').style.display = 'none';
+          document.getElementById('productImage').value = '';
         } else {
-          alert('Error adding product');
+          alert('Error adding product: ' + (result.error || ''));
         }
       } catch (error) {
         console.error('Error adding product:', error);
@@ -275,8 +310,107 @@
       }
     }
 
-    function editProduct(id) {
-      alert('Edit functionality - Implement as needed');
+    async function editProduct(id) {
+      try {
+        const response = await fetch(`/api/product/${id}`);
+        const p = await response.json();
+        if (!p) { alert('Product not found'); return; }
+
+        // Show the form
+        document.getElementById('addProductForm').style.display = 'block';
+        document.getElementById('addProductForm').scrollIntoView({ behavior: 'smooth' });
+
+        // Pre-fill fields
+        document.getElementById('productName').value = p.name || '';
+        document.getElementById('productBrand').value = p.brand_name || '';
+        document.getElementById('productCategory').value = p.category_id || '';
+        document.getElementById('productGender').value = p.gender || 'men';
+        document.getElementById('productDescription').value = p.description || '';
+        document.getElementById('originalPrice').value = p.original_price || '';
+        document.getElementById('salePrice').value = p.sale_price || '';
+        document.getElementById('discount').value = p.discount || '';
+        document.getElementById('productImage').value = p.image || '';
+        document.getElementById('productSizes').value = p.sizes ? JSON.parse(p.sizes).join(',') : '';
+        document.getElementById('productStock').value = p.stock || '';
+        document.getElementById('productFeatured').checked = !!p.featured;
+        document.getElementById('productNewArrival').checked = !!p.new_arrival;
+
+        // Show existing image preview
+        if (p.image) {
+          document.getElementById('imagePreview').src = p.image;
+          document.getElementById('imagePreviewContainer').style.display = 'block';
+        }
+
+        // Switch form submit to update mode
+        const form = document.querySelector('#addProductForm form');
+        form.onsubmit = (event) => updateProduct(event, id);
+        document.querySelector('#addProductForm h3').textContent = 'Edit Product';
+        document.querySelector('#addProductForm button[type="submit"]').textContent = 'Update Product';
+      } catch (error) {
+        console.error('Error loading product:', error);
+        alert('Error loading product details');
+      }
+    }
+
+    async function updateProduct(event, id) {
+      event.preventDefault();
+
+      let imagePath = document.getElementById('productImage').value;
+      try {
+        const uploaded = await uploadImageIfSelected();
+        if (uploaded) imagePath = uploaded;
+      } catch (err) {
+        alert('Image upload failed: ' + err.message);
+        return;
+      }
+
+      const productData = {
+        name: document.getElementById('productName').value,
+        brand_name: document.getElementById('productBrand').value,
+        category_id: parseInt(document.getElementById('productCategory').value),
+        gender: document.getElementById('productGender').value,
+        description: document.getElementById('productDescription').value,
+        original_price: parseFloat(document.getElementById('originalPrice').value),
+        sale_price: parseFloat(document.getElementById('salePrice').value),
+        discount: parseInt(document.getElementById('discount').value),
+        image: imagePath,
+        sizes: document.getElementById('productSizes').value,
+        stock: parseInt(document.getElementById('productStock').value),
+        featured: document.getElementById('productFeatured').checked ? 1 : 0,
+        new_arrival: document.getElementById('productNewArrival').checked ? 1 : 0
+      };
+
+      try {
+        const response = await fetch(`/api/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert('Product updated successfully!');
+          resetAddProductForm();
+          hideAddProductForm();
+          loadProducts();
+        } else {
+          alert('Error updating product: ' + (result.error || ''));
+        }
+      } catch (error) {
+        console.error('Error updating product:', error);
+        alert('Error updating product');
+      }
+    }
+
+    function resetAddProductForm() {
+      const form = document.querySelector('#addProductForm form');
+      form.reset();
+      form.onsubmit = addProduct;
+      document.getElementById('productImage').value = '';
+      document.getElementById('imagePreviewContainer').style.display = 'none';
+      document.getElementById('imagePreview').src = '';
+      document.querySelector('#addProductForm h3').textContent = 'Add New Product';
+      document.querySelector('#addProductForm button[type="submit"]').textContent = 'Add Product';
     }
 
     async function loadOrders() {
