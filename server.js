@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,19 @@ app.use(session({
 app.use(express.static('public'));
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
+
+// Multer — store uploaded images in memory so we can convert to base64
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Initialize database tables and sample data
 function initializeDatabase() {
@@ -444,27 +458,69 @@ app.get('/api/admin/products', (req, res) => {
   });
 });
 
+// Helper: find or create a brand by name, returns brand_id via callback
+function findOrCreateBrand(brandName, callback) {
+  const trimmed = brandName.trim();
+  const slug = trimmed.toLowerCase().replace(/\s+/g, '-');
+  db.get('SELECT id FROM brands WHERE LOWER(name) = LOWER(?)', [trimmed], (err, row) => {
+    if (err) return callback(err);
+    if (row) return callback(null, row.id);
+    db.run('INSERT INTO brands (name, slug) VALUES (?, ?)', [trimmed, slug], function(err2) {
+      if (err2) return callback(err2);
+      callback(null, this.lastID);
+    });
+  });
+}
+
+// Image upload endpoint — returns a base64 data-URI stored directly in the DB
+app.post('/api/admin/upload-image', (req, res) => {
+  if (!req.session.admin) return res.status(401).json({ error: 'Unauthorized' });
+  upload.single('image')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    res.json({ success: true, imageUrl: base64 });
+  });
+});
+
+// Expose brands list to admin UI
+app.get('/api/admin/brands', (req, res) => {
+  if (!req.session.admin) return res.status(401).json({ error: 'Unauthorized' });
+  db.all('SELECT * FROM brands ORDER BY name ASC', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 app.post('/api/admin/products', (req, res) => {
-  const { name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
-  db.run('INSERT INTO products (name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [name, brand_id, category_id, description, original_price, sale_price, discount, image, JSON.stringify(sizes), stock, gender, featured, new_arrival], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json({ success: true, productId: this.lastID });
-    }
+  if (!req.session.admin) return res.status(401).json({ error: 'Unauthorized' });
+  const { name, brand_name, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
+  findOrCreateBrand(brand_name || 'Unknown', (err, brand_id) => {
+    if (err) return res.status(500).json({ error: err.message });
+    db.run(
+      'INSERT INTO products (name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, brand_id, category_id, description, original_price, sale_price, discount, image, JSON.stringify(sizes), stock, gender, featured, new_arrival],
+      function(err2) {
+        if (err2) return res.status(500).json({ error: err2.message });
+        res.json({ success: true, productId: this.lastID });
+      }
+    );
   });
 });
 
 app.put('/api/admin/products/:id', (req, res) => {
-  const { name, brand_id, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
-  db.run('UPDATE products SET name = ?, brand_id = ?, category_id = ?, description = ?, original_price = ?, sale_price = ?, discount = ?, image = ?, sizes = ?, stock = ?, gender = ?, featured = ?, new_arrival = ? WHERE id = ?',
-    [name, brand_id, category_id, description, original_price, sale_price, discount, image, JSON.stringify(sizes), stock, gender, featured, new_arrival, req.params.id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json({ success: true });
-    }
+  if (!req.session.admin) return res.status(401).json({ error: 'Unauthorized' });
+  const { name, brand_name, category_id, description, original_price, sale_price, discount, image, sizes, stock, gender, featured, new_arrival } = req.body;
+  findOrCreateBrand(brand_name || 'Unknown', (err, brand_id) => {
+    if (err) return res.status(500).json({ error: err.message });
+    db.run(
+      'UPDATE products SET name = ?, brand_id = ?, category_id = ?, description = ?, original_price = ?, sale_price = ?, discount = ?, image = ?, sizes = ?, stock = ?, gender = ?, featured = ?, new_arrival = ? WHERE id = ?',
+      [name, brand_id, category_id, description, original_price, sale_price, discount, image, JSON.stringify(sizes), stock, gender, featured, new_arrival, req.params.id],
+      function(err2) {
+        if (err2) return res.status(500).json({ error: err2.message });
+        res.json({ success: true });
+      }
+    );
   });
 });
 
